@@ -95,7 +95,7 @@
     <option value="e_norm">Environmental (E_norm)</option>
     <option value="gen">Trips Generated (gen)</option>
     <option value="att">Trips Attracted (att)</option>
-    <option value="net">Net Flow (net = att − gen)</option>
+    <option value="net">Net Flow (net = att - gen)</option>
     <option value="ratio">Att/Gen Ratio</option>
     <option value="pop">Population (Pop_zone)</option>
   </select>
@@ -115,12 +115,19 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="data/boundary.js"></script>
+<!-- <script src="data/boundary.js"></script>
 <script src="data/roads.js"></script>
 <script src="data/desa_pop.js"></script>
 <script src="data/zones.js"></script>
 <script src="data/main_routes.js"></script>
-<script src="data/od_flows.js"></script>
+<script src="data/od_flows.js"></script> -->
+
+<script src="boundary.js"></script>
+<script src="roads.js"></script>
+<script src="desa_pop.js"></script>
+<script src="zones.js"></script>
+<script src="main_routes.js"></script>
+<script src="od_flows.js"></script>
 <script>
   const map = L.map('map', { zoomControl: false });
   L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -148,7 +155,7 @@
     return `rgb(${r},${g},${b})`;
   }
   function fmt(v, d = 2) {
-    if (v === null || v === undefined || isNaN(v)) return '–';
+    if (v === null || v === undefined || isNaN(v)) return '-';
     return Number(v).toLocaleString(undefined, { maximumFractionDigits: d });
   }
 
@@ -159,7 +166,7 @@
     e_norm: 'Environmental suitability (normalized)',
     gen: 'Trips Generated',
     att: 'Trips Attracted',
-    net: 'Net Flow (Attracted − Generated)',
+    net: 'Net Flow (Attracted - Generated)',
     ratio: 'Attraction / Generation Ratio',
     pop: 'Population per zone'
   };

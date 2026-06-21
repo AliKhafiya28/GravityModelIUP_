@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Gravity Model Analysis | Residential Attractiveness — Kecamatan Cerme, Gresik</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Gravity model analysis of residential location attractiveness for Kecamatan Cerme, Kabupaten Gresik, Jawa Timur — a companion study to the MCDA residential suitability analysis."/>
+<style>
+  :root {
+    --accent: #ff5722;
+    --accent-dark: #e64a19;
+    --bg: #f8fafc;
+    --panel: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: rgba(15, 23, 42, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text); background: var(--bg); line-height: 1.6;
+  }
+  a { color: var(--accent-dark); }
+
+  /* ---- Nav ---- */
+  header.nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 28px;
+  }
+  header.nav .brand { font-weight: 800; font-size: 14px; letter-spacing: 0.02em; }
+  header.nav .brand span { color: var(--accent); }
+  header.nav nav a {
+    margin-left: 18px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--text);
+  }
+  header.nav nav a:hover { color: var(--accent); }
+  @media (max-width: 720px) {
+    header.nav nav a { margin-left: 10px; font-size: 11px; }
+  }
+
+  /* ---- Hero ---- */
+  .hero {
+    padding: 72px 28px 56px; text-align: center;
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #312018 100%);
+    color: #fff;
+  }
+  .hero .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .hero h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 16px; font-weight: 800; line-height: 1.2; }
+  .hero p { max-width: 640px; margin: 0 auto 28px; color: #cbd5e1; font-size: 15px; }
+  .hero .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 24px; border-radius: 999px; font-weight: 700; font-size: 13px;
+    text-decoration: none; transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); }
+
+  /* ---- Sections ---- */
+  section { padding: 64px 28px; max-width: 1080px; margin: 0 auto; }
+  section h2 { font-size: 28px; margin: 0 0 8px; font-weight: 800; }
+  section .section-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  section .lead { color: var(--muted); font-size: 15px; max-width: 760px; margin-bottom: 36px; }
+  .alt-bg { background: #fff; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+  /* ---- Stat cards ---- */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+  }
+  .stat-card .value { font-size: 28px; font-weight: 800; color: var(--text); }
+  .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ---- Methodology ---- */
+  .formula-box {
+    background: #0f172a; color: #e2e8f0; border-radius: 14px; padding: 24px 28px; margin: 20px 0;
+    font-family: "SF Mono", "Cascadia Code", Consolas, monospace; font-size: 14px; overflow-x: auto;
+  }
+  .formula-box .line { margin: 6px 0; }
+  .formula-box .comment { color: #94a3b8; }
+  .param-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 20px; }
+  .param-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .param-card .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .param-card .v { font-size: 16px; font-weight: 700; margin-top: 4px; }
+
+  .step-list { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+  .step-list li {
+    counter-increment: step; position: relative; padding: 14px 0 14px 44px; border-bottom: 1px solid var(--border);
+  }
+  .step-list li:last-child { border-bottom: none; }
+  .step-list li::before {
+    content: counter(step); position: absolute; left: 0; top: 12px;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;
+  }
+  .step-list b { display: block; margin-bottom: 2px; }
+  .step-list span.desc { color: var(--muted); font-size: 13px; }
+
+  /* ---- Tables ---- */
+  table.results { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--panel); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(15,23,42,0.04); }
+  table.results th, table.results td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+  table.results th { background: #f1f5f9; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  table.results tr:last-child td { border-bottom: none; }
+  .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  @media (max-width: 800px) { .tables-grid { grid-template-columns: 1fr; } }
+  .tag-high { color: #b2182b; font-weight: 700; }
+  .tag-low { color: #2166ac; font-weight: 700; }
+
+  /* ---- Embeds ---- */
+  .embed-frame {
+    width: 100%; height: 620px; border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+  }
+  .embed-frame iframe { width: 100%; height: 100%; border: none; }
+  .embed-actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .embed-actions a { font-size: 13px; font-weight: 600; }
+
+  /* ---- Downloads ---- */
+  .downloads-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .download-card { display: block; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; text-decoration: none; color: var(--text); transition: border-color 0.15s ease, transform 0.15s ease; }
+  .download-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .download-card .name { font-weight: 700; font-size: 14px; }
+  .download-card .desc { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+  footer { padding: 32px 28px; text-align: center; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="brand">Gravity<span>Model</span> · Cerme</div>
+  <nav>
+    <a href="#overview">Overview</a>
+    <a href="#methodology">Methodology</a>
+    <a href="#findings">Findings</a>
+    <a href="#map">Results Map</a>
+    <a href="#simulation">Simulation</a>
+    <a href="#downloads">Downloads</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="eyebrow">MCDA Companion Study &middot; Kecamatan Cerme, Kabupaten Gresik, Jawa Timur</div>
+  <h1>Gravity Model Analysis of<br>Residential Location Attractiveness</h1>
+  <p>A spatial-interaction model estimating where people live, work, and travel within Kecamatan Cerme — built to complement the Multi-Criteria Decision Analysis (MCDA) for residential area suitability, by translating accessibility and gravity-based potential into a Residential Attractiveness Index (RAI) for 288 grid zones.</p>
+  <div class="cta">
+    <a class="btn btn-primary" href="#map">Explore the Results Map</a>
+    <a class="btn btn-secondary" href="#simulation">View Trip Simulation</a>
+  </div>
+</div>
+
+<section id="overview">
+  <div class="section-eyebrow">Overview</div>
+  <h2>What this analysis does</h2>
+  <p class="lead">
+    Kecamatan Cerme was divided into a 500&nbsp;m analysis grid (288 zones). For each zone, the model estimates how many residential
+    trips it <em>generates</em> (based on population) and how many it <em>attracts</em> (based on the mass of nearby destinations —
+    services, roads, and built-up activity), then distributes trips between zones using a gravity equation weighted by travel cost
+    along the real road network. The resulting accessibility, gravity-potential, and net-flow scores are combined into a single
+    Residential Attractiveness Index (RAI) per zone — a direct, quantitative input to the broader MCDA residential suitability study.
+  </p>
+</section>
+
+<section id="methodology" class="alt-bg">
+  <div class="section-eyebrow">Methodology</div>
+  <h2>Gravity model formulation</h2>
+  <p class="lead">The model follows the classic spatial-interaction (gravity) formulation, calibrated with an exponential travel-cost decay function and run on the actual Kecamatan Cerme road network.</p>
+
+  <div class="formula-box">
+    <div class="line"><span class="comment">// Trips between zone i (origin) and zone j (destination)</span></div>
+    <div class="line">T<sub>ij</sub> &nbsp;=&nbsp; V<sub>i</sub><sup>&alpha;</sup> &middot; W<sub>j</sub><sup>&beta;</sup> &middot; f(c<sub>ij</sub>)</div>
+    <div class="line"><span class="comment">// Exponential travel-cost decay</span></div>
+    <div class="line">f(c<sub>ij</sub>) &nbsp;=&nbsp; exp(&minus;&lambda; &middot; c<sub>ij</sub>)</div>
+  </div>
+
+  <div class="param-grid">
+    <div class="param-card"><div class="k">V&#7522; — origin mass</div><div class="v">Zone population (dasymetric)</div></div>
+    <div class="param-card"><div class="k">W&#7488; — destination mass</div><div class="v">Built-up / activity weight</div></div>
+    <div class="param-card"><div class="k">&alpha;, &beta; — mass exponents</div><div class="v">1.0, 1.0</div></div>
+    <div class="param-card"><div class="k">&lambda; — decay coefficient</div><div class="v">3.0 / hour</div></div>
+    <div class="param-card"><div class="k">c&#7522;&#7488; — travel cost</div><div class="v">Road-network shortest-path time (h)</div></div>
+    <div class="param-card"><div class="k">Spatial unit</div><div class="v">500 m &times; 500 m grid (288 zones)</div></div>
+  </div>
+
+  <h2 style="margin-top:48px;">From flows to the Residential Attractiveness Index</h2>
+  <p class="lead">Each zone's RAI combines three normalized (0&ndash;100) components derived from the gravity model run:</p>
+  <ol class="step-list">
+    <li><b>Gravity potential (G_norm)</b><span class="desc">Total inbound + outbound gravity interaction T<sub>ij</sub> for the zone, normalized — how strongly the zone is connected to population and activity elsewhere.</span></li>
+    <li><b>Accessibility (A_norm)</b><span class="desc">Inverse of average travel cost to other zones — how quickly a resident of this zone can reach the rest of Cerme.</span></li>
+    <li><b>Environmental suitability (E_norm)</b><span class="desc">Locally-derived suitability score (land cost / flood-risk proxies from the parallel MCDA layers), normalized.</span></li>
+    <li><b>Generated vs. attracted trips (gen, att, net, ratio)</b><span class="desc">Population-weighted trips generated by residents of the zone vs. trips attracted to it — used to flag "residential-leaning" vs. "hub-leaning" zones.</span></li>
+  </ol>
+  <p class="lead" style="margin-top:20px;">
+    <b>Two model versions were run:</b> v1 used building-footprint-based mass for V<sub>i</sub>; v2 (used throughout this site) apportions
+    BPS desa-level population to each 500&nbsp;m zone via dasymetric mapping for a more realistic population-weighted estimate.
+  </p>
+</section>
+
+<section id="mcda">
+  <div class="section-eyebrow">Connection to the MCDA Study</div>
+  <h2>How this feeds the residential suitability MCDA</h2>
+  <p class="lead">
+    The Multi-Criteria Decision Analysis for residential area suitability in Kecamatan Cerme combines several spatial criteria
+    (land cost, flood risk, slope, land use, proximity to facilities, etc.) into a composite suitability score per zone. This
+    gravity model contributes — and cross-checks — the <strong>accessibility and demand-side</strong> dimension of that score:
+  </p>
+  <ol class="step-list">
+    <li><b>Accessibility criterion (A_norm, RAI)</b><span class="desc">Replaces a simple "distance to road" proxy with a network-based travel-cost measure that accounts for the whole road graph, not just nearest-link distance.</span></li>
+    <li><b>Demand / population-pressure criterion (G_norm, Pop_zone)</b><span class="desc">Gravity potential reflects how much residential and activity "mass" surrounds a zone — a forward-looking demand signal that complements static land-use criteria.</span></li>
+    <li><b>Generation vs. attraction balance (gen/att/net/ratio)</b><span class="desc">Zones where attraction &gt; generation behave more like activity hubs (commercial/services); zones where generation &gt; attraction behave more like dormitory/residential areas — useful for validating MCDA "residential" classifications.</span></li>
+    <li><b>Infrastructure criterion (Main Routes, road network)</b><span class="desc">The aggregated main-route flows highlight which corridors carry the most movement, helping prioritize infrastructure-related MCDA criteria (e.g. proximity to arterial roads).</span></li>
+  </ol>
+  <p class="lead" style="margin-top:20px;">
+    In short: the MCDA answers <em>"where is land physically/environmentally suitable for housing?"</em>, while the gravity model
+    answers <em>"where would housing actually be well-connected and in demand?"</em> — RAI can be added as an additional weighted
+    criterion, or used as an independent validation layer against the MCDA's final suitability map.
+  </p>
+</section>
+
+<section id="findings" class="alt-bg">
+  <div class="section-eyebrow">Key Findings</div>
+  <h2>Model outputs at a glance</h2>
+  <p class="lead">Summary statistics from the population-weighted (v2) gravity model run across all 288 zones in Kecamatan Cerme.</p>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="value">288</div><div class="label">Analysis Zones (500m)</div></div>
+    <div class="stat-card"><div class="value">25</div><div class="label">Desa Covered</div></div>
+    <div class="stat-card"><div class="value">~83,900</div><div class="label">Total Population</div></div>
+    <div class="stat-card"><div class="value">~7.72M</div><div class="label">Total Daily Trips (&Sigma;T&#7522;&#7488;)</div></div>
+    <div class="stat-card"><div class="value">46,983</div><div class="label">Zone-pair Flows (i&ne;j)</div></div>
+    <div class="stat-card"><div class="value">9.6 – 88.0</div><div class="label">RAI Range</div></div>
+  </div>
+
+  <div class="tables-grid">
+    <div>
+      <h3 style="margin:0 0 10px; font-size:15px;">Highest RAI zones</h3>
+      <table class="results">
+        <thead><tr><th>Zone</th><th>Desa</th><th>RAI</th><th>Population</th></tr></thead>
+        <tbody>
+          <tr><td>103</td><td>Betiting</td><td class="tag-high">88.01</td><td>4,536</td></tr>
+          <tr><td>123</td><td>Cagakagung</td><td class="tag-high">76.42</td><td>2,221</td></tr>
+          <tr><td>106</td><td>Cerme Kidul</td><td class="tag-high">72.30</td><td>1,701</td></tr>
+          <tr><td>124</td><td>Cerme Lor</td><td class="tag-high">70.98</td><td>3,388</td></tr>
+          <tr><td>105</td><td>Cerme Kidul</td><td class="tag-high">66.66</td><td>1,199</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="margin:0 0 10px; font-size:15px;">Lowest RAI zones</h3>
+      <table class="results">
+        <thead><tr><th>Zone</th><th>Desa</th><th>RAI</th><th>Population</th></tr></thead>
+        <tbody>
+          <tr><td>131</td><td>Kandangan</td><td class="tag-low">9.62</td><td>93</td></tr>
+          <tr><td>247</td><td>Gedangkulud</td><td class="tag-low">11.69</td><td>0</td></tr>
+          <tr><td>261</td><td>Banjarsari</td><td class="tag-low">12.15</td><td>0</td></tr>
+          <tr><td>246</td><td>Tambakberas</td><td class="tag-low">15.25</td><td>0</td></tr>
+          <tr><td>270</td><td>Banjarsari</td><td class="tag-low">16.02</td><td>65</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="lead" style="margin-top:20px;">
+    High-RAI zones cluster around <strong>Cerme Lor / Cerme Kidul / Betiting / Cagakagung</strong> — the existing central/sub-urban core
+    with dense population and strong road connectivity. Low-RAI zones are concentrated in peripheral, sparsely-populated areas of
+    <strong>Kandangan, Gedangkulud, Tambakberas, and Banjarsari</strong>, consistent with their distance from main routes and lower
+    built-up density.
+  </p>
+</section>
+
+<section id="map">
+  <div class="section-eyebrow">Interactive Map</div>
+  <h2>Explore the results spatially</h2>
+  <p class="lead">Toggle layers for the analysis grid (colored by RAI or any model component), desa population, road network, main routes, and zone-to-zone trip flows.</p>
+  <div class="embed-frame">
+    <iframe src="results.html" loading="lazy" title="Interactive results map"></iframe>
+  </div>
+  <div class="embed-actions">
+    <a href="results.html" target="_blank">Open full-screen &#8599;</a>
+  </div>
+</section>
+
+<section id="simulation" class="alt-bg">
+  <div class="section-eyebrow">Agent Simulation</div>
+  <h2>Trip flow animation</h2>
+  <p class="lead">An animated simulation of sampled trip-making agents moving between origin and destination zones, illustrating how modeled flows distribute across the road network.</p>
+  <div class="embed-frame">
+    <iframe src="Gravity_Trip_Simulation.html" loading="lazy" title="Trip flow simulation"></iframe>
+  </div>
+  <div class="embed-actions">
+    <a href="Gravity_Trip_Simulation.html" target="_blank">Open full-screen &#8599;</a>
+  </div>
+</section>
+
+<section id="downloads">
+  <div class="section-eyebrow">Data &amp; Downloads</div>
+  <h2>Source data &amp; outputs</h2>
+  <p class="lead">GeoJSON layers used by the interactive map (WGS84), and a written summary of the methodology.</p>
+  <div class="downloads-grid">
+    <a class="download-card" href="data/zones.geojson" download><div class="name">data/zones.geojson</div><div class="desc">288 analysis zones — RAI, gravity potential, accessibility, generated/attracted trips</div></a>
+    <a class="download-card" href="data/desa_pop.geojson" download><div class="name">data/desa_pop.geojson</div><div class="desc">25 desa polygons with BPS population &amp; density</div></a>
+    <a class="download-card" href="data/main_routes.geojson" download><div class="name">data/main_routes.geojson</div><div class="desc">50 aggregated main-route segments with modeled flow</div></a>
+    <a class="download-card" href="data/od_flows.geojson" download><div class="name">data/od_flows.geojson</div><div class="desc">33 zone-to-zone OD flow lines (trips, travel cost)</div></a>
+    <a class="download-card" href="data/roads.geojson" download><div class="name">data/roads.geojson</div><div class="desc">820-segment road network used for cost-matrix routing</div></a>
+    <a class="download-card" href="data/boundary.geojson" download><div class="name">data/boundary.geojson</div><div class="desc">Kecamatan Cerme administrative boundary</div></a>
+    <a class="download-card" href="Cerme_Gravity_Model_Report.docx" download><div class="name">Cerme_Gravity_Model_Report.docx</div><div class="desc">Full written methodology &amp; results report</div></a>
+  </div>
+</section>
+
+<footer>
+  Gravity Model Analysis — Kecamatan Cerme, Kabupaten Gresik, Jawa Timur &middot; Companion to the MCDA Residential Area Suitability study.
+</footer>
+
+</body>
+</html>

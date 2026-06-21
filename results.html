@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Results Map | Gravity Model — Kecamatan Cerme</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  :root {
+    --accent: #ff5722;
+    --panel-bg: rgba(255, 255, 255, 0.95);
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: rgba(15, 23, 42, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body, #map {
+    height: 100%; margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+  }
+  .leaflet-control-attribution { font-size: 10px; }
+
+  .panel {
+    position: absolute;
+    background: var(--panel-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    padding: 14px 18px;
+    z-index: 800;
+  }
+
+  #back-link {
+    position: absolute; top: 16px; left: 16px; z-index: 900;
+    background: var(--panel-bg); border-radius: 10px; padding: 8px 14px;
+    font-size: 12px; font-weight: 600; text-decoration: none; color: var(--text);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.1);
+  }
+  #back-link:hover { color: var(--accent); }
+
+  #title-panel { top: 64px; left: 16px; max-width: 270px; }
+  #title-panel .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  #title-panel h1 { margin: 0 0 6px; font-size: 15px; font-weight: 700; line-height: 1.3; }
+  #title-panel p { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  #layers-panel { top: 16px; right: 16px; font-size: 12px; width: 220px; }
+  #layers-panel .section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 10px 0 6px; }
+  #layers-panel .section-title:first-child { margin-top: 0; }
+  .layer-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .layer-row label { cursor: pointer; }
+  .layer-row input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; }
+  #zone-metric { width: 100%; padding: 5px 6px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; background: #fff; color: var(--text); }
+
+  #legend-panel { bottom: 16px; right: 16px; font-size: 11px; min-width: 170px; }
+  #legend-panel .legend-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .legend-swatch { display: inline-block; flex-shrink: 0; }
+  .legend-line { width: 20px; height: 0; border-top: 3px solid; }
+  .legend-box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); }
+  .ramp { height: 10px; width: 100%; border-radius: 4px; background: linear-gradient(to right, #2166ac, #f7f7f7, #b2182b); margin: 4px 0 2px; }
+  .ramp-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
+
+  .info-tooltip { font-size: 12px; line-height: 1.5; }
+  .info-tooltip b { display: block; margin-bottom: 2px; }
+
+  @media (max-width: 720px) {
+    #layers-panel { width: 170px; font-size: 11px; }
+    #title-panel { max-width: 60vw; }
+    .panel { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<a id="back-link" href="index.html">&larr; Back to project overview</a>
+
+<div id="title-panel" class="panel">
+  <div class="eyebrow">Interactive Results Map</div>
+  <h1>Residential Attractiveness &amp; Trip Flows</h1>
+  <p>Toggle layers to explore the 500&nbsp;m analysis grid, accessibility/attractiveness scores, road network, aggregated main routes, and zone-to-zone trip flows for Kecamatan Cerme.</p>
+</div>
+
+<div id="layers-panel" class="panel">
+  <div class="section-title">Zones — color by</div>
+  <select id="zone-metric">
+    <option value="rai" selected>Residential Attractiveness Index (RAI)</option>
+    <option value="g_norm">Gravity Potential (G_norm)</option>
+    <option value="a_norm">Accessibility (A_norm)</option>
+    <option value="e_norm">Environmental (E_norm)</option>
+    <option value="gen">Trips Generated (gen)</option>
+    <option value="att">Trips Attracted (att)</option>
+    <option value="net">Net Flow (net = att − gen)</option>
+    <option value="ratio">Att/Gen Ratio</option>
+    <option value="pop">Population (Pop_zone)</option>
+  </select>
+
+  <div class="section-title">Layers</div>
+  <div class="layer-row"><input type="checkbox" id="chk-boundary" checked><label for="chk-boundary">Kecamatan boundary</label></div>
+  <div class="layer-row"><input type="checkbox" id="chk-zones" checked><label for="chk-zones">Analysis zones (500m)</label></div>
+  <div class="layer-row"><input type="checkbox" id="chk-desa"><label for="chk-desa">Desa population (choropleth)</label></div>
+  <div class="layer-row"><input type="checkbox" id="chk-roads" checked><label for="chk-roads">Road network</label></div>
+  <div class="layer-row"><input type="checkbox" id="chk-routes" checked><label for="chk-routes">Main routes (flow)</label></div>
+  <div class="layer-row"><input type="checkbox" id="chk-od"><label for="chk-od">OD trip-flow lines</label></div>
+</div>
+
+<div id="legend-panel" class="panel">
+  <div class="legend-title" id="legend-title">Zones — RAI</div>
+  <div id="legend-body"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="data/boundary.js"></script>
+<script src="data/roads.js"></script>
+<script src="data/desa_pop.js"></script>
+<script src="data/zones.js"></script>
+<script src="data/main_routes.js"></script>
+<script src="data/od_flows.js"></script>
+<script>
+  const map = L.map('map', { zoomControl: false });
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd', maxZoom: 20,
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+  }).addTo(map);
+
+  // --- helpers ---------------------------------------------------------
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  // diverging blue -> light -> red ramp
+  function rampColor(t) {
+    t = Math.max(0, Math.min(1, t));
+    const stops = [
+      [33, 102, 172],   // blue
+      [247, 247, 247],  // light
+      [178, 24, 43]      // red
+    ];
+    let seg = t < 0.5 ? 0 : 1;
+    let tt = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
+    const c0 = stops[seg], c1 = stops[seg + 1];
+    const r = Math.round(lerp(c0[0], c1[0], tt));
+    const g = Math.round(lerp(c0[1], c1[1], tt));
+    const b = Math.round(lerp(c0[2], c1[2], tt));
+    return `rgb(${r},${g},${b})`;
+  }
+  function fmt(v, d = 2) {
+    if (v === null || v === undefined || isNaN(v)) return '–';
+    return Number(v).toLocaleString(undefined, { maximumFractionDigits: d });
+  }
+
+  const METRIC_LABELS = {
+    rai: 'Residential Attractiveness Index (RAI)',
+    g_norm: 'Gravity Potential (normalized)',
+    a_norm: 'Accessibility (normalized)',
+    e_norm: 'Environmental suitability (normalized)',
+    gen: 'Trips Generated',
+    att: 'Trips Attracted',
+    net: 'Net Flow (Attracted − Generated)',
+    ratio: 'Attraction / Generation Ratio',
+    pop: 'Population per zone'
+  };
+
+  // --- boundary ----------------------------------------------------------
+  const boundaryLayer = L.geoJSON(window.DATA_BOUNDARY, {
+    style: { color: '#ff0000', weight: 2, opacity: 0.6, fillOpacity: 0.03 }
+  });
+
+  // --- roads ----------------------------------------------------------
+  const roadsLayer = L.geoJSON(window.DATA_ROADS, {
+    style: { color: '#555', weight: 1, opacity: 0.35 }
+  });
+
+  // --- desa population choropleth -------------------------------------
+  let desaVals = window.DATA_DESA_POP.features.map(f => f.properties.pop_total).filter(v => v != null);
+  let desaMin = Math.min(...desaVals), desaMax = Math.max(...desaVals);
+  const desaLayer = L.geoJSON(window.DATA_DESA_POP, {
+    style: f => {
+      const v = f.properties.pop_total;
+      const t = (v - desaMin) / (desaMax - desaMin || 1);
+      return { color: '#888', weight: 0.6, fillOpacity: 0.55, fillColor: rampColor(t) };
+    },
+    onEachFeature: (f, layer) => {
+      const p = f.properties;
+      layer.bindTooltip(
+        `<div class="info-tooltip"><b>${p.desa || ''}</b>` +
+        `Population: ${fmt(p.pop_total, 0)}<br>` +
+        `Households: ${fmt(p.jml_kk, 0)}<br>` +
+        `Density: ${fmt(p.pop_dens, 1)} / unit area</div>`,
+        { sticky: true }
+      );
+    }
+  });
+
+  // --- main routes (flow-weighted) -------------------------------------
+  let flowVals = window.DATA_MAIN_ROUTES.features.map(f => f.properties.flow).filter(v => v != null);
+  let flowMin = Math.min(...flowVals), flowMax = Math.max(...flowVals);
+  const routesLayer = L.geoJSON(window.DATA_MAIN_ROUTES, {
+    style: f => {
+      const v = f.properties.flow;
+      const t = (v - flowMin) / (flowMax - flowMin || 1);
+      return { color: '#1d4ed8', weight: 1.5 + t * 6, opacity: 0.55 + t * 0.35 };
+    },
+    onEachFeature: (f, layer) => {
+      layer.bindTooltip(`<div class="info-tooltip">Flow: ${fmt(f.properties.flow, 1)} trips/day</div>`, { sticky: true });
+    }
+  });
+
+  // --- OD flow lines -----------------------------------------------------
+  let odVals = window.DATA_OD_FLOWS.features.map(f => f.properties.trips).filter(v => v != null);
+  let odMin = Math.min(...odVals), odMax = Math.max(...odVals);
+  const odLayer = L.geoJSON(window.DATA_OD_FLOWS, {
+    style: f => {
+      const v = f.properties.trips;
+      const t = (v - odMin) / (odMax - odMin || 1);
+      return { color: '#ff5722', weight: 1 + t * 5, opacity: 0.35 + t * 0.5 };
+    },
+    onEachFeature: (f, layer) => {
+      const p = f.properties;
+      layer.bindTooltip(
+        `<div class="info-tooltip">Zone ${p.zone_i} &rarr; Zone ${p.zone_j}<br>` +
+        `Trips: ${fmt(p.trips, 1)}<br>Cost: ${fmt(p.cost_hr, 3)} h</div>`,
+        { sticky: true }
+      );
+    }
+  });
+
+  // --- zones (dynamic coloring) ------------------------------------------
+  let zoneLayer = null;
+  function zoneMetricRange(metric) {
+    const vals = window.DATA_ZONES.features.map(f => f.properties[metric]).filter(v => v != null && !isNaN(v));
+    return [Math.min(...vals), Math.max(...vals)];
+  }
+  function buildZoneLayer(metric) {
+    const [vmin, vmax] = zoneMetricRange(metric);
+    return L.geoJSON(window.DATA_ZONES, {
+      style: f => {
+        const v = f.properties[metric];
+        const t = (v - vmin) / (vmax - vmin || 1);
+        return { color: '#444', weight: 0.4, opacity: 0.6, fillOpacity: 0.6, fillColor: rampColor(t) };
+      },
+      onEachFeature: (f, layer) => {
+        const p = f.properties;
+        layer.bindTooltip(
+          `<div class="info-tooltip"><b>Zone ${p.zone_id}</b> (${p.desa || ''})` +
+          `RAI: ${fmt(p.rai, 3)}<br>` +
+          `G_norm: ${fmt(p.g_norm, 3)} · A_norm: ${fmt(p.a_norm, 3)} · E_norm: ${fmt(p.e_norm, 3)}<br>` +
+          `Pop: ${fmt(p.pop, 0)} · Wj: ${fmt(p.wj, 1)}<br>` +
+          `Generated: ${fmt(p.gen, 1)} · Attracted: ${fmt(p.att, 1)}<br>` +
+          `Net: ${fmt(p.net, 1)} · Ratio: ${fmt(p.ratio, 2)}</div>`,
+          { sticky: true }
+        );
+      }
+    });
+  }
+  function updateLegend(metric) {
+    const [vmin, vmax] = zoneMetricRange(metric);
+    document.getElementById('legend-title').textContent = 'Zones — ' + METRIC_LABELS[metric];
+    document.getElementById('legend-body').innerHTML =
+      `<div class="ramp"></div>` +
+      `<div class="ramp-labels"><span>${fmt(vmin, 2)}</span><span>${fmt(vmax, 2)}</span></div>` +
+      `<div class="legend-item" style="margin-top:8px;"><span class="legend-swatch legend-line" style="border-color:#ff0000;"></span> Kecamatan boundary</div>` +
+      `<div class="legend-item"><span class="legend-swatch legend-line" style="border-color:#555;"></span> Road network</div>` +
+      `<div class="legend-item"><span class="legend-swatch legend-line" style="border-color:#1d4ed8; border-top-width:4px;"></span> Main route (width = flow)</div>` +
+      `<div class="legend-item"><span class="legend-swatch legend-line" style="border-color:#ff5722; border-top-width:4px;"></span> OD trip flow (width = trips)</div>`;
+  }
+
+  function setZoneLayer(metric) {
+    if (zoneLayer) map.removeLayer(zoneLayer);
+    zoneLayer = buildZoneLayer(metric);
+    if (document.getElementById('chk-zones').checked) zoneLayer.addTo(map);
+    updateLegend(metric);
+  }
+
+  // --- initial layer setup -------------------------------------------
+  setZoneLayer('rai');
+  boundaryLayer.addTo(map);
+  roadsLayer.addTo(map);
+  routesLayer.addTo(map);
+
+  const fullBounds = boundaryLayer.getBounds();
+  map.fitBounds(fullBounds);
+
+  // --- wiring ----------------------------------------------------------
+  document.getElementById('zone-metric').addEventListener('change', e => setZoneLayer(e.target.value));
+
+  const layerMap = {
+    'chk-boundary': boundaryLayer,
+    'chk-desa': desaLayer,
+    'chk-roads': roadsLayer,
+    'chk-routes': routesLayer,
+    'chk-od': odLayer
+  };
+  Object.entries(layerMap).forEach(([id, layer]) => {
+    document.getElementById(id).addEventListener('change', e => {
+      if (e.target.checked) layer.addTo(map); else map.removeLayer(layer);
+    });
+  });
+  document.getElementById('chk-zones').addEventListener('change', e => {
+    if (!zoneLayer) return;
+    if (e.target.checked) zoneLayer.addTo(map); else map.removeLayer(zoneLayer);
+  });
+</script>
+</body>
+</html>
